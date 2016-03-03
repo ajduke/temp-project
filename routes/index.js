@@ -40,44 +40,42 @@ router.get('/process', function(req, res, next) {
 
   // starting for new user
   followers_ids= [];
+  // clear mongodb database for same
 
-  var params = {
-     screen_name: handle,
-    // q:"from:twitterapi since:2011-06-20 until:2011-06-20"
-    //q:"_ajduke",
-    // count: 2,
-    // exclude_replies: true,
-    // trim_user: true,
-    // since: "2015-01-05",
-    //until: "2016-02-20"
-    // max_id:"703520067649142800"
-  };
   // fetch all followers ids and store it variable
   // for each followers fetch their timeline
   // from each timeline post, get day they posted and record it
   // for each post, record the time range in which the has posted try to put like 2-3
 
-  //statuses/user_timeline
+  // statuses/user_timeline
   // search/tweets
   var last_tweet_ts= "";
   var current_user_id = "";
   async.waterfall([
     function(callback){
+      // Get Date and time of last tweet
       client.get('statuses/user_timeline', {user_id:id, count:1, trim_user:1}, function(error,tweets, response) {
         if (error) {
           console.log('Error while fetching tweets ' + id + " ---- " + JSON.stringify(error));
         }
         if (tweets.length > 0) {
           last_tweet_ts = tweets[0].created_at;
-          console.log('------------- last tweet timestamp ' + last_tweet_ts);
           current_user_id= tweets[0].user.id;
-          callback(null);
+          console.log('------------- last tweet timestamp ' + last_tweet_ts);
+          db.tweets.remove({"for_user_id": current_user_id}, function(){
+            callback(null);
+          });
         } else {
           callback(new Error("No user tweets found"));
         }
-      })
+        res.send({
+          status: 200,
+          message: "We you processing your data"
+        })
+      });
     },
     function(callback){
+      var params = {screen_name: handle};
       // get the followers list
       client.get('followers/ids', params, function(error,ids, response){
         if (error) {
@@ -89,78 +87,87 @@ router.get('/process', function(req, res, next) {
             if(errp){
               console.log("error while inserting followers list " + errp)
             }
-            console.log("inserted properly "+ ids.length);
+            console.log("inserted properly "+ ids.ids.length);
             callback(null, ids);
           });
         }
       });
     },
     function(ids, callback){
+      // tweets of each follower and store into mongodb
+      var count= 1;
       async.eachSeries(ids.ids,function(id, callback){
         client.get('statuses/user_timeline', {user_id:id, count:1000,trim_user:1}, function(error,tweets, response){
           if(error){
             console.log('Error while fetching tweets ' + id + " ---- " + error);
           }
-
-          console.log('Got tweets for user '+ id +' as ' + tweets.length);
+          console.log(count+' : Got tweets for user '+ id +' as ' + tweets.length);
+          count++;
           async.eachSeries(tweets, function(t, cb){
             var n_ts = new Date(t.created_at);
-            console.log(t.created_at)
+            //console.log(t.created_at);
+            // his last tweet timestamp
             var u_ts = new Date(last_tweet_ts);
+            // process only those tweets which are posted his last tweet
+            // so to extract
             if(n_ts.getTime() >= u_ts.getTime()) {
               var t_obj = {
                 created_at : t.created_at,
                 for_user_id: current_user_id,
                 user_id: id,
                 tweet_id: t.id,
-                h: n_ts.getUTCHours(),
-                d: days[n_ts.getUTCDay()]// 0-6
+                hour: n_ts.getUTCHours(),
+                day: days[n_ts.getUTCDay()]// 0-6
               };
-
               db.tweets.insert(t_obj ,function(e, r){
                 if (e){
                   console.log("Error while inserting tweet ",e);
-
                 } else {
-                  console.log("Tweet updated ", r)
+                  //console.log("Tweet updated ", r)
                 }
-                cb()
-              });
+                cb();
+              }); // tweet insertion comleted
             }else{
               // discard tweets
-              console.log('Tweets not in range ');
               cb(new Error('Tweets not in range'));
             }
 
           },function(e){
-            if(e)
+            if(e){
               console.log(e)
+            }
             console.log("Done processing tweets for " + id);
             callback()
 
           });
-
-          //console.log('got tweet for ' + id + "\n" + JSON.stringify(tweets));
-
-        })
+        }); // getting each followers timeline completed
       },function(err){
-        console.log('completed iterating for followers')
-        callback(null, ids);
+        console.log('completed iterating for followers');
+        // Now, we stored all tweets of his followers
+        db.tweets.aggregate([{$group:{_id:"$hour", total:{$sum:1}}}, {$sort:{total:-1}}, {$limit:1}], function(err, hour){
+          if(err) {
+            console.log("Error while aggregating of hour ");
+          }
+          callback(null, hour);
+        });
+      });
+    },
+    function(hour,callback){
+      // aggregate on hour and day fields
+      db.tweets.aggregate([{$group:{_id:"$day", total:{$sum:1}}}, {$sort:{total:-1}}, {$limit:1}], function(errp, day){
+        if(errp) {
+          console.log("Error while aggregating of day");
+        }
+        var t = {hour: hour[0], day: day[0]};
+        console.log(JSON.stringify(t));
+        callback(null, t);
       });
 
-    },
-    function(ids,callback){
-      callback(null, ids);
     }
   ], function(err, resp){
-    // final callback after processing,
-    // return data to client with
-    res.send({
-      handle: handle,
-      tweets: resp
-    })
-  })
-
+      var message = 'You should post on ' +resp.day._id + " and between time " + resp.hour._id + " - " + (resp.hour._id+1);
+      console.log(message);
+  });
 });
 
 module.exports = router;
