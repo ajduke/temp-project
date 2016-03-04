@@ -3,7 +3,8 @@ var router = express.Router();
 var Twitter = require('twitter');
 var async= require('async');
 var mongojs = require('mongojs')
-var db = mongojs("ajduke:mypass121@ds019638.mlab.com:19638/ajduke-demos", ["followers","tweets"]);
+//ajduke:mypass121@ds019638.mlab.com:19638/ajduke-demos
+var db = mongojs("localhost", ["followers","tweets"]);
 
 var client = new Twitter({
   consumer_key: '3rVYrp0rAQYOaWigdUjwB2o0V',
@@ -14,23 +15,32 @@ var client = new Twitter({
 
 var days= ["Sun","Mon", "Tue", "Wed","Thu", "Fri", "Sat"];
 
-var followers_ids= [];
-
 router.get('/tweets', function(req, res, next) {
-  //{user_id:"_ajduke", count:1, trim_user:1}
-  client.get('statuses/user_timeline', {user_id:"103760901"}, function(error,tweets, response) {
-    if(error){
-      console.log(error);
-      res.send({
-        error: error
-      })
-      return;
-    }
-
-    res.send({
-      tweets: tweets
-    })
-  })
+  io.sockets.emit('notif', {
+    handle: "_ajduke",
+    day: "Wed",
+    time: "12-13"
+  });
+  console.log('emitted event ')
+  res.send({
+    handle: "_ajduke",
+    day: "Wed",
+    time: "12-13"
+  });
+  //var p = {user_id:"_ajduke", count:1, trim_user:0};
+  //client.get('statuses/user_timeline', p, function(error,tweets, response) {
+  //  if(error){
+  //    console.log(error);
+  //    res.send({
+  //      error: error
+  //    })
+  //    return;
+  //  }
+  //
+  //  res.send({
+  //    tweets: tweets
+  //  })
+  //})
 
 });
 
@@ -39,7 +49,6 @@ router.get('/process', function(req, res, next) {
   var id  = req.query.id;
 
   // starting for new user
-  followers_ids= [];
   // clear mongodb database for same
 
   // fetch all followers ids and store it variable
@@ -54,13 +63,27 @@ router.get('/process', function(req, res, next) {
   async.waterfall([
     function(callback){
       // Get Date and time of last tweet
-      client.get('statuses/user_timeline', {user_id:id, count:1, trim_user:1}, function(error,tweets, response) {
+      var p = {
+        count:1
+      };
+      if(handle){
+        p.screen_name = handle;
+      }else {
+        p.user_id = id;
+      }
+
+      console.log('processing for ' + JSON.stringify(p));
+
+      client.get('statuses/user_timeline', p, function(error,tweets, response) {
         if (error) {
           console.log('Error while fetching tweets ' + id + " ---- " + JSON.stringify(error));
+          callback(new Error("Error fetching user tweets"));
+          return;
         }
         if (tweets.length > 0) {
           last_tweet_ts = tweets[0].created_at;
           current_user_id= tweets[0].user.id;
+          handle= tweets[0].user.screen_name;
           console.log('------------- last tweet timestamp ' + last_tweet_ts);
           db.tweets.remove({"for_user_id": current_user_id}, function(){
             callback(null);
@@ -82,7 +105,6 @@ router.get('/process', function(req, res, next) {
           console.log(error);
           callback(new Error(error))
         } else {
-          followers_ids = ids;
           db.followers.update({user_handle:handle},{$set:{user_handle: handle, followers: ids}},{upsert:true}, function(errp, resp){
             if(errp){
               console.log("error while inserting followers list " + errp)
@@ -165,7 +187,13 @@ router.get('/process', function(req, res, next) {
 
     }
   ], function(err, resp){
-      var message = 'You should post on ' +resp.day._id + " and between time " + resp.hour._id + " - " + (resp.hour._id+1);
+      //var message = 'You should post on ' +resp.day._id + " and between time " + resp.hour._id + " - " + (resp.hour._id+1);
+      io.sockets.emit('notif', {
+        handle: handle,
+        id: current_user_id,
+        day: resp.day._id,
+        time: resp.hour._id + "-" + (resp.hour._id +1),
+      });
       console.log(message);
   });
 });

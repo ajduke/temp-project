@@ -3,19 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <link rel="stylesheet" href="app.css"/>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.0-rc.2/angular.min.js"></script>
+  <script src="lib/angular.min.js"></script>
+  <script src="lib/socket.io.js"></script>
+  <script src="lib/socket-angular.js"></script>
   <script src="javascripts/app.js"></script>
   <title>Twitter followers</title>
 </head>
-<body>
+<body ng-app="crowdfire">
 
-<div class="container">
+<div class="container" ng-controller="MainController">
   <h2>Enter one of following </h2>
+
   <div class="wrap">
     <labal for="twitter-handle">
       Twitter Handle
     </labal>
-    <input type="text" name="twitter-handle" class="twitter-handle">
+    <input type="text" name="twitter-handle" ng-model="user_handle" class="twitter-handle">
   </div>
   <div class="wrap">
     <h2>OR</h2>
@@ -24,22 +27,28 @@
     <label for="twitter-id">
       Twitter Id
     </label>
-    <input type="text" name="twitterid" class="twitter-id">
+    <input type="text" name="twitter-id" class="twitter-id" ng-model="user_id">
 
   </div>
   <div class="wrap">
-    <a href="" class="submit-btn">Process</a>
+    <a href="" class="submit-btn" ng-click="process()">Process</a>
   </div>
 
 </div>
 
-<div class="container">
-  Hi @_ajduke, Here are results <br/>
-  After anaylzying your followers, we found that folowing is best time to post
-  <span class="day">Friday</span> at time <span class="time">3pm- 4pm</span>. <br>
-  With you will get more followers.
+<div class="container" ng-if="processing">
+  <div class="final-message" ng-if="results">
+    Hi @{{results.handle}}, Here are results <br/>
+    After analyzing your followers, we found is best time to post you next tweet is
+    <br>
+    <span class="day">{{results.day}}</span> at around <span class="time">{{results.time}}</span>. <br>
+  </div>
+  <div class="loading"  ng-if="!results">
+    Processing your results....
+  </div>
 
 
 </div>
+
 </body>
 </html>
