@@ -3,19 +3,19 @@ var app =  angular.module('crowdfire', ['btford.socket-io']);
 app.run(function ($rootScope) {
   $rootScope.results= null;
   $rootScope.processing= null;
+  $rootScope.error = false;
 })
 //socketConnect
 app.controller('MainController', [
   "$scope", "socketConnect","$rootScope", "$http", function($scope,socketConnect, $rootScope, $http) {
-    console.log('inside of controller ');
     $scope.process= function(){
       var handle = $scope.user_handle;
       var id = $scope.user_id;
       $rootScope.results= null;
+      $rootScope.error = false;
       console.log(handle + " : " +  id);
       if (handle && handle.length !== 0) {
         // process with handle
-        console.log('entered handled ', handle);
         // start loader for div
         $rootScope.processing= true;
         $http.get('/t/process?handle='+handle).success(function (res) {
@@ -36,16 +36,16 @@ app.controller('MainController', [
         });
       } else {
         // nothing is entered
+        $rootScope.error = true;
         console.log('nothing is entrered');
       }
     };
 
     socketConnect.forward('notif', $scope);
     $scope.$on('socket:notif', function (ev, data) {
-      console.log('got the notification ', data)
+      console.log('got the results ', data)
       $rootScope.results =data;
     });
-    console.log('completed controller ')
 
   }
 ]);

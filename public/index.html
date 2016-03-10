@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <link rel="stylesheet" href="app.css"/>
+  <link rel="stylesheet" href="stylesheets/app.css"/>
   <script src="lib/angular.min.js"></script>
   <script src="lib/socket.io.js"></script>
   <script src="lib/socket-angular.js"></script>
@@ -12,7 +12,11 @@
 <body ng-app="crowdfire">
 
 <div class="container" ng-controller="MainController">
-  <h2>Enter one of following </h2>
+  <div class="wrap error" ng-if="error">
+    <h3>Oops!! Cant process if no Twitter or User id, Enter any of them </h3>
+  </div>
+
+  <h3>To get best time and day to post on Twitter, Enter anyone of following </h3>
 
   <div class="wrap">
     <labal for="twitter-handle">

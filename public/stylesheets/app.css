@@ -28,6 +28,12 @@
 .container .wrap h2 {
     margin: 0px;
 }
+.container .wrap.error h3 {
+    margin: 0px;
+    padding: 0px;
+    color: tomato;
+    font-size: 16px;
+}
 .container .wrap:last-child {
     margin-top: 35px;
 }
