@@ -2,13 +2,14 @@
 .container {
     width: 300px;
     background: #f2f2f2;
-    padding: 40px;
-    margin: 40px auto;
+    padding: 30px;
+    margin: 20px auto;
     line-height: 25px;
     font-weight: 200;
     font-family: 'Roboto Condensed', sans-serif;
     box-shadow: 0 0 5px 2px #ddd;
 }
+
 .container input {
     outline: 0px;
     font-family: 'Roboto Condensed', sans-serif;
@@ -50,4 +51,17 @@
 }
 .container .day, .container .time {
     font-weight: 800;
+}
+
+.final-message {
+ box-shadow: 0 0 2px #666;
+ padding: 15px;
+}
+
+ul {
+    margin: 0px;
+    padding: 0px;
+}
+ul li {
+    list-style: none;
 }

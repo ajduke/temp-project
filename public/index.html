@@ -16,8 +16,6 @@
     <h3>Oops!! Cant process if no Twitter or User id, Enter any of them </h3>
   </div>
 
-  <h3>To get best time and day to post on Twitter, Enter anyone of following </h3>
-
   <div class="wrap">
     <labal for="twitter-handle">
       Twitter Handle
@@ -37,22 +35,30 @@
   <div class="wrap">
     <a href="" class="submit-btn" ng-click="process()">Process</a>
   </div>
+  <div class="wrap">
+
+    <div class="final-message" ng-if="results">
+
+      Your best timings are: <br/>
+      <ul>
+        <li  ng-repeat="(key, value) in results.day_time">
+          <span class="time">{{key}}</span> -  {{value}}
+        </li>
+      </ul>
+
+      <br/>
+      Your best day to tweet is <span class="day">{{results.day}}</span>
+    </div>
+    <div class="loading"  ng-if="!results">
+      {{updates.message}}
+    </div>
+  </div>
 
 </div>
 
-<div class="container" ng-if="processing">
-  <div class="final-message" ng-if="results">
-    Hi @{{results.handle}}, Here are results <br/>
-    After analyzing your followers, we found is best time to post you next tweet is
-    <br>
-    <span class="day">{{results.day}}</span> at around <span class="time">{{results.time}}</span>. <br>
-  </div>
-  <div class="loading"  ng-if="!results">
-    Processing your results....
-  </div>
+<!--<div class="container" >-->
 
 
-</div>
-
+<!--</div>-->
 </body>
 </html>

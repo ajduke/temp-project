@@ -4,6 +4,7 @@ app.run(function ($rootScope) {
   $rootScope.results= null;
   $rootScope.processing= null;
   $rootScope.error = false;
+  $rootScope.updates = null;
 })
 //socketConnect
 app.controller('MainController', [
@@ -41,10 +42,16 @@ app.controller('MainController', [
       }
     };
 
-    socketConnect.forward('notif', $scope);
-    $scope.$on('socket:notif', function (ev, data) {
-      console.log('got the results ', data)
+    socketConnect.forward('result', $scope);
+    $scope.$on('socket:result', function (ev, data) {
+      console.log('got the results ', data);
       $rootScope.results =data;
+    });
+
+    socketConnect.forward('updates', $scope);
+    $scope.$on('socket:updates', function (ev, data) {
+      console.log('got the results ', data);
+      $rootScope.updates =data;
     });
 
   }

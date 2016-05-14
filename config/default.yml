@@ -1,0 +1,7 @@
+App:
+  Twitter:
+    consumer_key: '3rVYrp0rAQYOaWigdUjwB2o0V'
+    consumer_secret: 'btPZwEMPLpDvpssPlajLTJlhbiYrB5TWTt4p2XBmhBfP7QfQP0'
+    access_token_key: '108542086-z4NXhnMBjCmYmJCwtolq6dy5YPm0G8JkOnFBHsj5'
+    access_token_secret: 'zhcZ3jSj4afn4pV4vBmd3Fj9act4L0FuDkzxgcMNRajKa'
+    rate_limit_sleep_time: 900000

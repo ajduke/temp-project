@@ -30,7 +30,7 @@ server.on('error', onError);
 server.on('listening', onListening);
 
 
-require('../app/socket-init').init(server);
+require('../app/sockets/socket-init').init(server);
 
 
 /**
